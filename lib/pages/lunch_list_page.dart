@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
+import '../data/default_members.dart';
 
 class LunchListPage extends StatefulWidget {
   const LunchListPage({super.key});
@@ -21,13 +22,25 @@ class _LunchListPageState extends State<LunchListPage> {
 
   Future<void> _loadMembers() async {
     final members = await _storageService.getMembers();
-    setState(() {
-      _lunchMembers.clear();
-      _lunchMembers.addAll(members.map((member) => {
-            'name': member['name'],
-            'selected': member['selected'] ?? true,
-          }));
-    });
+    if (members.isEmpty) {
+      // 如果是第一次載入，使用預設名單
+      final defaultMembers = DefaultMembers.members
+          .map((name) => {
+                'name': name,
+                'selected': true,
+              })
+          .toList();
+      await _storageService.saveMembers(defaultMembers);
+      setState(() {
+        _lunchMembers.clear();
+        _lunchMembers.addAll(defaultMembers);
+      });
+    } else {
+      setState(() {
+        _lunchMembers.clear();
+        _lunchMembers.addAll(members);
+      });
+    }
   }
 
   void _addMember() {
