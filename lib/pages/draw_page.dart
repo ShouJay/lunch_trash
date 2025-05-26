@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
 import '../widgets/result_card.dart';
+import '../data/default_members.dart';
 
 class DrawPage extends StatefulWidget {
   const DrawPage({super.key});
@@ -25,10 +26,26 @@ class _DrawPageState extends State<DrawPage> {
   Future<void> _loadMembers() async {
     try {
       final members = await _storageService.getMembers();
-      if (mounted) {
-        setState(() {
-          _lunchMembers = members;
-        });
+      if (members.isEmpty) {
+        // 如果是第一次載入，使用預設名單
+        final defaultMembers = DefaultMembers.members
+            .map((name) => {
+                  'name': name,
+                  'selected': true,
+                })
+            .toList();
+        await _storageService.saveMembers(defaultMembers);
+        if (mounted) {
+          setState(() {
+            _lunchMembers = defaultMembers;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _lunchMembers = members;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
